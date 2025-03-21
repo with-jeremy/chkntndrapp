@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useMatchingStore } from '../lib/store';
 import ShowSwipeCards from './ShowSwipeCards';
 import type { Restaurant } from '../lib/types';
+import { ensureMatchingLoaded } from '../lib/initStore';
 
 interface MatchingProps {
   matchingId: string;
@@ -36,11 +37,18 @@ export default function Matching({ matchingId }: MatchingProps) {
       try {
         setLoading(true);
         
+        // Make sure the matching is loaded
+        console.log('Ensuring matching is loaded:', matchingId);
+        const matchingLoaded = ensureMatchingLoaded(matchingId);
+        console.log('Matching loaded status:', matchingLoaded);
+        
         // Set current matching in store
+        console.log('Setting current matching in store');
         setCurrentMatching(matchingId);
         
         // Get restaurants from the matching
         const matchingRestaurants = getMatchingRestaurants();
+        console.log('Retrieved restaurants:', matchingRestaurants.length);
         
         if (matchingRestaurants.length === 0) {
           setError('No restaurants found for this matching.');

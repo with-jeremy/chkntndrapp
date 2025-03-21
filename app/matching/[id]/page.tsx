@@ -6,6 +6,7 @@ import Link from 'next/link';
 import Matching from '../../../components/Matching';
 import { useMatchingStore } from '../../../lib/store';
 import { isValidMatchingId } from '../../../utils/generateMatchingId';
+import { initializeStore, ensureMatchingLoaded } from '../../../lib/initStore';
 
 /**
  * Page component for a specific matching session
@@ -24,15 +25,24 @@ export default function MatchingPage() {
   
   // Validate and check for matching on load
   useEffect(() => {
+    // First ensure the store is initialized with all available matchings
+    initializeStore();
+
     if (!matchingId || !isValidMatchingId(matchingId)) {
       setError('Invalid matching ID');
       setLoading(false);
       return;
     }
     
+    console.log('Checking for matching with ID:', matchingId);
+    
+    // Try to ensure the matching is loaded from localStorage if it exists
+    const loadedFromStorage = ensureMatchingLoaded(matchingId);
+    console.log('Matching loaded from localStorage:', loadedFromStorage);
+    
     // Check if matching exists in store
-    // In a real app, this would be a server request
     const matchingExists = matchingId in matchings;
+    console.log('Matching exists in store:', matchingExists);
     
     if (!matchingExists) {
       setError('Matching not found. It may have expired or been deleted.');

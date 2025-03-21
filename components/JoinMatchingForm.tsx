@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useMatchingStore } from '../lib/store';
 import { isValidMatchingId } from '../utils/generateMatchingId';
+import { initializeStore, ensureMatchingLoaded } from '../lib/initStore';
 
 /**
  * Form component for joining an existing matching
@@ -12,6 +13,12 @@ import { isValidMatchingId } from '../utils/generateMatchingId';
 export default function JoinMatchingForm() {
   const router = useRouter();
   const { joinMatching } = useMatchingStore();
+
+  // Initialize the store when the component mounts
+  useEffect(() => {
+    // This ensures any existing matchings in localStorage are loaded into the store
+    initializeStore();
+  }, []);
   
   const [matchingId, setMatchingId] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -31,11 +38,18 @@ export default function JoinMatchingForm() {
         throw new Error('Please enter a valid 4-digit matching ID');
       }
       
-      // Join the matching
+      console.log('Attempting to join matching with ID:', matchingId);
+      
+      // Make sure the matching is loaded from localStorage if it exists
+      const matchingExists = ensureMatchingLoaded(matchingId);
+      console.log('Matching exists in localStorage:', matchingExists);
+      
+      // Try to join the matching
       const success = await joinMatching(matchingId);
+      console.log('Join matching result:', success);
       
       if (!success) {
-        throw new Error('qInvalid matching ID or matching not found');
+        throw new Error('Invalid matching ID or matching not found');
       }
       
       // Navigate to the matching page
