@@ -1,0 +1,90 @@
+# Cline Rules for Restaurant Matcher
+
+## Project Patterns
+
+### File Structure
+- Place all page components in `/app` directory according to Next.js 15 App Router conventions
+- Place reusable UI components in `/components` directory
+- Place utility functions in `/utils` directory
+- Place core functionality (store, actions, types) in `/lib` directory
+- Use TypeScript file extensions (.ts, .tsx) for all code files
+- Organize page routes to support both matching creation and joining flows
+
+### Naming Conventions
+- Use PascalCase for component filenames and component names
+- Use camelCase for utility functions, variables, and prop names
+- Use kebab-case for directory names in the App Router structure
+- Use UPPER_SNAKE_CASE for environment variables
+
+### Component Structure
+- Each component should have a clear, focused responsibility
+- Use TypeScript interfaces for component props
+- Keep components relatively small and maintainable
+- Extract complex logic to custom hooks or utilities
+- Use client components for interactive elements like forms and swiping cards
+- Use server components for static or data-fetching parts
+
+### State Management
+- Use Zustand for global state management
+- Implement a user identification system to track different users
+- Track swipe data separately for each user
+- Use localStorage via Zustand persist middleware for data persistence
+- Keep state updates centralized in store actions
+- Use middleware for cross-cutting concerns like synchronization
+
+## Code Formatting
+- Format imports in alphabetical order
+- Group imports by: React, external libraries, internal modules, types
+- Use 2-space indentation for all files
+- Use trailing commas in multiline objects and arrays
+- Use explicit return types for functions with complex return values
+
+## TypeScript Usage
+- Use explicit type annotations for function parameters
+- Use interfaces for object shapes that might be extended
+- Use type aliases for union types or complex types
+- Use generic types where appropriate for reusable functions
+
+## API Integration
+- Always use server-side API calls to protect API keys
+- Transform external API responses to match internal data structures
+- Include proper error handling for all API calls
+- Use environment variables for all API keys and endpoints
+- Cache restaurant data to minimize API calls
+
+## Testing Considerations
+- Focus on testing user flows and critical paths
+- Test API integration points with mock data
+- Test state management with different scenarios
+- Test responsive design across device sizes
+
+## Performance Guidelines
+- Optimize component rendering with proper dependency arrays
+- Use Next.js built-in optimizations for images and assets
+- Minimize network requests by batching API calls
+- Implement proper loading states for async operations
+
+## User Experience
+- Provide clear feedback for all user actions
+- Implement smooth animations for swiping cards
+- Design clear visual indicators for matches
+- Make matching ID easy to copy and share
+- Implement error states with helpful messages
+- Use consistent spacing and component sizing throughout
+- Follow accessibility best practices for all components
+- Ensure gestures work well on mobile devices
+
+## Multi-user Functionality
+- Generate unique 4-digit matching IDs that are easy to remember and share
+- Track user role (initiator or joiner) in the store
+- Associate swipes with the specific user who made them
+- Implement polling for checking partner swipes
+- Detect and highlight matching restaurant preferences
+- Allow multiple joiners to participate in the same matching (future)
+
+## Project Evolution Notes
+- Created on March 20, 2025
+- Starting with Next.js 15, App Router, Tailwind, TypeScript
+- Memory bank established for documentation
+- Focus on clean architecture and maintainable code
+- Implementing Tinder-style swiping functionality for restaurant selection
