@@ -31,7 +31,7 @@ export function initializeStore(): void {
     console.log('Found stored matchings:', storedMatchings);
     
     // Merge any matchings that aren't already in the store
-    const matchingsToMerge: Record<string, unknown> = {};
+    const matchingsToMerge: Record<string, typeof currentMatchings[keyof typeof currentMatchings]> = {};
     let needsUpdate = false;
     
     Object.entries(storedMatchings).forEach(([id, matching]) => {

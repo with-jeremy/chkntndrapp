@@ -121,7 +121,7 @@ export default function Matching({ matchingId }: MatchingProps) {
     }, 5000);
     
     return () => clearInterval(pollInterval);
-  }, [matchingId, setCurrentMatching, getMatchingRestaurants]);
+  }, [matchingId, setCurrentMatching, getMatchingRestaurants, userRole]);
 
   // Handle when a match is found
   const handleMatch = (restaurantId: string) => {
