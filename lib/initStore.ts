@@ -3,6 +3,7 @@
  * Helps when pages are accessed directly via URL or in different tabs
  */
 import { useMatchingStore } from './store';
+import { Matching } from './types';
 
 /**
  * Initialize the store by checking localStorage for matching data
@@ -12,7 +13,7 @@ import { useMatchingStore } from './store';
 export function initializeStore(): void {
   try {
     // Get the current matchings from the store
-    const currentMatchings = useMatchingStore.getState().matchings;
+    const currentMatchings = useMatchingStore.getState().matchings as Record<string, Matching>;
     
     // Try to load matchings from localStorage
     const storedData = localStorage.getItem('restaurant-matcher-storage');
@@ -21,7 +22,7 @@ export function initializeStore(): void {
       return;
     }
     
-    const parsedData = JSON.parse(storedData);
+    const parsedData: { state?: { matchings?: Record<string, Matching> } } = JSON.parse(storedData);
     if (!parsedData.state || !parsedData.state.matchings) {
       console.log('No matchings found in stored data');
       return;
@@ -31,7 +32,7 @@ export function initializeStore(): void {
     console.log('Found stored matchings:', storedMatchings);
     
     // Merge any matchings that aren't already in the store
-    const matchingsToMerge: Record<string, typeof currentMatchings[keyof typeof currentMatchings]> = {};
+    const matchingsToMerge: Record<string, Matching> = {};
     let needsUpdate = false;
     
     Object.entries(storedMatchings).forEach(([id, matching]) => {
@@ -76,7 +77,7 @@ export function ensureMatchingLoaded(matchingId: string): boolean {
       return false;
     }
     
-    const parsedData = JSON.parse(storedData);
+    const parsedData: { state?: { matchings?: Record<string, Matching> } } = JSON.parse(storedData);
     if (!parsedData.state || !parsedData.state.matchings || !parsedData.state.matchings[matchingId]) {
       console.log('Matching not found in stored data:', matchingId);
       return false;
