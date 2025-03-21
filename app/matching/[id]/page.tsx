@@ -15,7 +15,10 @@ import { initializeStore, ensureMatchingLoaded } from '../../../lib/initStore';
 export default function MatchingPage() {
   const params = useParams();
   const router = useRouter();
-  const { matchings } = useMatchingStore();
+  // We're not using the store directly via hook to avoid stale data issues
+  // Instead we'll use the store's getState() and setState() methods
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _ = useMatchingStore();
   
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -25,33 +28,69 @@ export default function MatchingPage() {
   
   // Validate and check for matching on load
   useEffect(() => {
-    // First ensure the store is initialized with all available matchings
-    initializeStore();
+    const checkMatching = async () => {
+      try {
+        // First ensure the store is initialized 
+        initializeStore();
 
-    if (!matchingId || !isValidMatchingId(matchingId)) {
-      setError('Invalid matching ID');
-      setLoading(false);
-      return;
-    }
+        if (!matchingId || !isValidMatchingId(matchingId)) {
+          setError('Invalid matching ID');
+          setLoading(false);
+          return;
+        }
+        
+        console.log('Checking for matching with ID:', matchingId);
+        
+        // Use a direct check of localStorage to verify if the matching exists there
+        let matchingFound = false;
+        try {
+          const storedData = localStorage.getItem('restaurant-matcher-storage');
+          if (storedData) {
+            const parsedData = JSON.parse(storedData);
+            if (parsedData.state && 
+                parsedData.state.matchings && 
+                parsedData.state.matchings[matchingId]) {
+              console.log('Found matching directly in localStorage:', matchingId);
+              matchingFound = true;
+              
+              // Force-load the matching into the store
+              useMatchingStore.setState((state) => ({
+                matchings: {
+                  ...state.matchings,
+                  [matchingId]: parsedData.state.matchings[matchingId]
+                }
+              }));
+            }
+          }
+        } catch (err) {
+          console.error('Error checking localStorage:', err);
+        }
+        
+        // Also ensure the matching is loaded via our utility function
+        const loadedFromStorage = ensureMatchingLoaded(matchingId);
+        console.log('Matching loaded from ensureMatchingLoaded:', loadedFromStorage);
+        
+        // Get the latest state directly
+        const freshMatchings = useMatchingStore.getState().matchings;
+        const matchingExists = matchingId in freshMatchings;
+        console.log('Final check - Matching exists in store:', matchingExists, freshMatchings);
+        
+        if (!matchingExists && !matchingFound) {
+          setError('Matching not found. It may have expired or been deleted.');
+          setLoading(false);
+          return;
+        }
+        
+        setLoading(false);
+      } catch (err) {
+        console.error('Error in checkMatching:', err);
+        setError('An error occurred while loading the matching.');
+        setLoading(false);
+      }
+    };
     
-    console.log('Checking for matching with ID:', matchingId);
-    
-    // Try to ensure the matching is loaded from localStorage if it exists
-    const loadedFromStorage = ensureMatchingLoaded(matchingId);
-    console.log('Matching loaded from localStorage:', loadedFromStorage);
-    
-    // Check if matching exists in store
-    const matchingExists = matchingId in matchings;
-    console.log('Matching exists in store:', matchingExists);
-    
-    if (!matchingExists) {
-      setError('Matching not found. It may have expired or been deleted.');
-      setLoading(false);
-      return;
-    }
-    
-    setLoading(false);
-  }, [matchingId, matchings]);
+    checkMatching();
+  }, [matchingId]);
   
   // Show loading state
   if (loading) {

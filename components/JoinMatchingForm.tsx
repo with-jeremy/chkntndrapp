@@ -40,16 +40,55 @@ export default function JoinMatchingForm() {
       
       console.log('Attempting to join matching with ID:', matchingId);
       
-      // Make sure the matching is loaded from localStorage if it exists
-      const matchingExists = ensureMatchingLoaded(matchingId);
-      console.log('Matching exists in localStorage:', matchingExists);
+      // Direct check of localStorage to ensure we're finding the matching
+      // This is more reliable than relying on the Zustand store alone
+      let matchingDirectlyFound = false;
+      try {
+        const storedData = localStorage.getItem('restaurant-matcher-storage');
+        if (storedData) {
+          const parsedData = JSON.parse(storedData);
+          if (parsedData.state && 
+              parsedData.state.matchings && 
+              parsedData.state.matchings[matchingId]) {
+            console.log('Found matching directly in localStorage:', matchingId);
+            matchingDirectlyFound = true;
+            
+            // Force-load the matching into the store
+            useMatchingStore.setState((state) => ({
+              matchings: {
+                ...state.matchings,
+                [matchingId]: parsedData.state.matchings[matchingId]
+              }
+            }));
+          } else {
+            console.log('Matching not found directly in localStorage:', matchingId);
+          }
+        } else {
+          console.log('No localStorage data found for restaurant-matcher-storage');
+        }
+      } catch (err) {
+        console.error('Error checking localStorage:', err);
+      }
       
-      // Try to join the matching
+      // Also try our utility function
+      const matchingExists = ensureMatchingLoaded(matchingId);
+      console.log('Matching exists after ensureMatchingLoaded:', matchingExists);
+      
+      // Get the latest state directly from the store
+      const currentMatchings = useMatchingStore.getState().matchings;
+      const matchingInStore = !!currentMatchings[matchingId];
+      console.log('Final check - Matching in store:', matchingInStore, 'Matchings:', currentMatchings);
+      
+      if (!matchingInStore && !matchingDirectlyFound) {
+        throw new Error('Matching not found. Please check the ID and try again.');
+      }
+      
+      // Try to join the matching with the loaded data
       const success = await joinMatching(matchingId);
       console.log('Join matching result:', success);
       
       if (!success) {
-        throw new Error('Invalid matching ID or matching not found');
+        throw new Error('Error joining matching. Please try again.');
       }
       
       // Navigate to the matching page

@@ -37,25 +37,68 @@ export default function Matching({ matchingId }: MatchingProps) {
       try {
         setLoading(true);
         
-        // Make sure the matching is loaded
-        console.log('Ensuring matching is loaded:', matchingId);
+        console.log('Initializing matching:', matchingId);
+        
+        // Direct check of localStorage for the matching
+        let matchingDirectlyFound = false;
+        let directlyLoadedRestaurants: Restaurant[] = [];
+        
+        try {
+          const storedData = localStorage.getItem('restaurant-matcher-storage');
+          if (storedData) {
+            const parsedData = JSON.parse(storedData);
+            if (parsedData.state && 
+                parsedData.state.matchings && 
+                parsedData.state.matchings[matchingId]) {
+              
+              console.log('Found matching directly in localStorage:', matchingId);
+              matchingDirectlyFound = true;
+              
+              // Get the restaurants directly from localStorage
+              const storedMatching = parsedData.state.matchings[matchingId];
+              if (storedMatching.restaurants && storedMatching.restaurants.length > 0) {
+                directlyLoadedRestaurants = storedMatching.restaurants;
+                console.log('Found restaurants directly in localStorage:', directlyLoadedRestaurants.length);
+              }
+              
+              // Force-load the matching into the store
+              useMatchingStore.setState((state) => ({
+                matchings: {
+                  ...state.matchings,
+                  [matchingId]: storedMatching
+                }
+              }));
+            }
+          }
+        } catch (err) {
+          console.error('Error checking localStorage:', err);
+        }
+        
+        // Also use our utility function as backup
+        console.log('Ensuring matching is loaded via utility:', matchingId);
         const matchingLoaded = ensureMatchingLoaded(matchingId);
-        console.log('Matching loaded status:', matchingLoaded);
+        console.log('Matching loaded status from utility:', matchingLoaded);
         
         // Set current matching in store
         console.log('Setting current matching in store');
         setCurrentMatching(matchingId);
         
-        // Get restaurants from the matching
-        const matchingRestaurants = getMatchingRestaurants();
-        console.log('Retrieved restaurants:', matchingRestaurants.length);
+        // Get restaurants from the matching via the store function
+        const storeRestaurants = getMatchingRestaurants();
+        console.log('Retrieved restaurants from store:', storeRestaurants.length);
         
-        if (matchingRestaurants.length === 0) {
+        // Determine which restaurants to use - if we found them in localStorage
+        // and the store doesn't have them, use the directly loaded ones
+        const finalRestaurants = matchingDirectlyFound && storeRestaurants.length === 0 && directlyLoadedRestaurants.length > 0
+          ? directlyLoadedRestaurants 
+          : storeRestaurants;
+        
+        if (finalRestaurants.length === 0) {
           setError('No restaurants found for this matching.');
           return;
         }
         
-        setRestaurants(matchingRestaurants);
+        setRestaurants(finalRestaurants);
       } catch (err) {
         setError('Error loading matching data');
         console.error(err);
